@@ -1,0 +1,72 @@
+        SRC  DST  CON  OPC
+        0000 0000 0000 0000
+
+        SRC: Defines access information for parameter 1 as source
+        DST: Defines access information for parameter 2 as destination
+        CON: Defines the operation as conditional
+        OPC: Defines the actual operation
+
+        Parameter Decoding (SRC/DST)
+        0000 -  AX   - Read/Write from/to ax
+        0001 -  BX   - Read/Write from/to bx
+        0010 -  CX   - Read/Write from/to cx
+        0011 -  DX   - Read/Write from/to dx
+        0100 -  SP   - Read/Write from/to sp
+        0110 -  PC   - Read/Write from/to pc
+        0111 -  ROM  - Read from rom
+
+        1000 - [AX]  - Read/Write from/to Ram at index of ax
+        1001 - [BX]  - Read/Write from/to Ram at index of bx
+        1010 - [CX]  - Read/Write from/to Ram at index of cx
+        1011 - [DX]  - Read/Write from/to Ram at index of dx
+        1100 - [SP]  - Read/Write from/to RAM at index of sp
+        1110 - [PC]  - Read/Write from/to Ram at index of pc
+        1111 - [ROM] - Read/Write from/to Ram at index of rom[pc]
+
+        * Note that the msb in SRC/DST defines if the access mode is by reference.
+        * Also note that writing to rom is only allowed by_ref
+
+        CONDITIONALS
+        EQ ENABLE L/G ENABLE E L/G
+        0         0          0 0
+
+        1000 - exec oper if equality flag is zero
+        1010 - exec oper if equality flag is not zero
+        0100 - exec oper if less than flag is not zero
+        0101 - exec oper if greater than flag is not zero
+        1110 - exec oper if less than flag is not zero or the equality flag is not zero
+        1111 - exec oper if greater than flag is not zero or the equality flag is not zero
+
+        =====================================================================================================
+        MNEMONIC    SRC     DST         CODE            Description
+        =====================================================================================================
+        NOP         --      --          00000000 (0x00) No operation
+        MOV         SRC     DST         00000001 (0x01) Move data from SRC to DST
+        CMP         SRCA    SRCB        00000010 (0x02) Compare SRCA and SRCB and set the core.flags
+        JMP         SRC     PC          00000011 (0x03) Move the value dereived from SRC into PC
+        OUT         SRC     PORT        00000100 (0x04) Send data SRC out port PORT
+        IN          PORT    DST         00000101 (0x05) Read from port PORT and store in DST
+        HLT         --      --          00000110 (0x06) Halt the CPU
+        BRK         --      --          00000111 (0x07) Debug Break
+        ADD         SRCA    SRCB/DST    00001000 (0x08) Add SRCA and SRCB and store result in DST
+        SUB         SRCA    SRCB/DST    00001001 (0x09) Sub SRCB from SRCA and store result in DST
+        MUL         SRCA    SRCB/DST    00001010 (0x0A) Mul SRCA and SRCB and store result in DST
+        DIV         SRCA    SRCB/DST    00001011 (0x0B) Div SRCB by SRCA and store result in DST
+        NOT         SRC/DST --          00001100 (0x0C) Bitwise NOT on SRC and store in DST
+        AND         SRCA    SRCB/DST    00001101 (0x0D) Bitwise AND between SRCA and SRCB and store result in DST
+        OR          SRCA    SRCB/DST    00001110 (0x0E) Bitwise OR between SRCA and SRCB and store result in DST
+        XOR         SRCA    SRCB/DST    00001111 (0x0F) Bitwise XOR between SRCA and SRCB and store result in DST
+
+        * Short hand and conditionals
+        JMP         TARG    PC          00000011 (0x01) Set core.PC to value stored in TARG
+        JE/JNZ      TARG    PC          10100011 (0xA1) Set core.PC to value stored in TARG if core.flags[0] != 0
+        JNE/JZ      TARG    PC          10000011 (0x81) Set core.PC to value stored in TARG if core.flags[0] == 0
+        JG          TARG    PC          01010011 (0x51) Set core.PC to value stored in TARG if core.flags[0] == 0 && core.flags[1] != 0
+        JGE         TARG    PC          11110011 (0xF1) Set core.PC to value stored in TARG if core.flags[0] != 0 || core.flags[1] != 0
+        JL          TARG    PC          01000011 (0x41) Set core.PC to value stored in TARG if core.flags[0] == 0 && core.flags[1] == 0
+        JLE         TARG    PC          11100011 (0xE1) Set core.PC to value stored in TARG if core.flags[0] != 0 || core.flags[1] == 0
+
+        =====================================================================================================
+
+        * Note there is no reason one could not have a conditional add or other operation... even a
+          conditional hlt. but i am not sure that makes sense.
